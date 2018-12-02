@@ -1,3 +1,6 @@
 [submodule "mininet"]
 	path = mininet
 	url = git@github.com:mininet/mininet.git
+[submodule "ryu"]
+	path = ryu
+	url = git@github.com:osrg/ryu.git
