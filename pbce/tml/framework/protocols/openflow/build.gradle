@@ -1,0 +1,9 @@
+plugins {
+    id 'java'
+}
+
+dependencies {
+    compile project(':framework')
+    compile 'org.projectfloodlight:openflowj:3.2.0-SNAPSHOT'
+    testCompile 'org.spockframework:spock-core:1.1-groovy-2.4'
+}

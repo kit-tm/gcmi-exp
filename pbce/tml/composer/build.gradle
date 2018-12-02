@@ -1,0 +1,21 @@
+plugins {
+  id 'java'
+  id 'application'
+  id 'net.ltgt.apt' version '0.10'
+}
+
+mainClassName = System.getProperty('mainClass') ?: 'com.github.sherter.jcon.composer.Main'
+
+dependencies {
+    implementation project(':examples:flowvisor')
+    implementation project(':examples:payless')
+    implementation project(':examples:pbce')
+    implementation project(':examples:log_and_forward')
+    implementation 'org.jgrapht:jgrapht-core:1.0.1'
+    implementation 'com.beust:jcommander:1.71'
+    implementation 'org.glassfish.jersey.containers:jersey-container-grizzly2-http:2.25.1'
+    implementation 'org.glassfish.jersey.media:jersey-media-json-jackson:2.25.1'
+    testImplementation 'org.spockframework:spock-core:1.1-groovy-2.4'
+	  compileOnly 'org.projectlombok:lombok:1.16.20'
+	  apt "org.projectlombok:lombok:1.16.20"
+}

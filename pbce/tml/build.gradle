@@ -1,0 +1,20 @@
+plugins {
+    id 'com.github.sherter.google-java-format' version '0.6'
+}
+
+allprojects {
+    repositories {
+        mavenCentral()
+        jcenter()
+        maven {
+            url 'https://oss.sonatype.org/content/repositories/snapshots/'
+        }
+    }
+    tasks.withType(JavaCompile) {
+        options.compilerArgs << '-Xlint:all'
+    }
+}
+
+googleJavaFormat {
+    toolVersion = 1.3
+}

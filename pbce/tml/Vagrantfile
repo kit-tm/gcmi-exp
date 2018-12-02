@@ -1,0 +1,19 @@
+# https://docs.vagrantup.com
+Vagrant.configure("2") do |config|
+  config.vm.box = "ubuntu/xenial64"
+  config.ssh.forward_x11 = true  # for spawning terminals for hosts/switches within mininet
+  config.vm.provision "shell", inline: <<-EOF
+		apt-get update
+		apt-get install -y openjdk-8-jdk python3-pip
+		pip3 install ryu==4.13
+		curl -L https://github.com/mininet/mininet/archive/2.2.2.tar.gz | tar -xz
+
+		# install.sh expects the directory to be named "mininet"
+		mv mininet-2.2.2 mininet
+
+		# -n: MiniNet dependencies + core files
+		# -w: Wireshark with OpenFlow dissector
+		# -V: given version of Open vSwitch
+		mininet/util/install.sh -n -w -V 2.7.0
+	EOF
+end

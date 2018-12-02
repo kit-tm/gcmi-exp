@@ -1,0 +1,12 @@
+plugins {
+    id 'java'
+    id 'application'
+}
+
+mainClassName = 'com.github.sherter.jcon.examples.pbce.Cli'
+
+dependencies {
+    compile project(':framework')
+    compile 'com.beust:jcommander:1.69'
+    testCompile 'org.spockframework:spock-core:1.1-groovy-2.4'
+}

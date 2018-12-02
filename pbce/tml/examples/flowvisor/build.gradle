@@ -1,0 +1,12 @@
+plugins {
+    id 'java-library'
+    id 'application'
+}
+
+mainClassName = 'com.github.sherter.jcon.examples.flowvisor.Cli'
+
+dependencies {
+    implementation project(':framework')
+    implementation 'com.beust:jcommander:1.69'
+    testImplementation 'org.spockframework:spock-core:1.1-groovy-2.4'
+}
