@@ -1,0 +1,12 @@
+plugins {
+    id 'java'
+    id 'application'
+}
+
+mainClassName = 'com.github.sherter.jcon.examples.payless.Interceptor'
+
+dependencies {
+    compile project(':framework')
+    runtime 'ch.qos.logback:logback-classic:1.2.2'
+}
+

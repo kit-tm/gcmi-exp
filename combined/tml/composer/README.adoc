@@ -1,0 +1,88 @@
+= Composer
+
+== Building
+In this directory run
+[source,shell]
+----
+../gradlew installDist
+----
+
+== Running
+After building, you will find run scripts in `build/install/composer/bin`
+Execute `./composer` on Linux and `composer.bat` on Windows.
+
+== Usage
+After starting the application, an HTTP-Server is listening on port `8080`.
+
+=== Resources
+==== /layers
+This resource is used to list and create new intermediate layers.
+===== GET
+Returns a list of all existing intermediate layers
+
+===== POST
+Create new intermediate layers:
+
+[source,shell]
+----
+curl -i localhost:8080/layers \
+     -H "Content-type: application/json" \
+     -d '{ "type" : "log_and_forward" }'
+----
+
+==== /layers/{id}
+===== GET
+Retrieve information about a particular layers
+
+===== DELETE
+Remove the layer from the system
+
+==== /edges
+This resource is responsible for managing the wiring between the
+layers and external components.
+
+===== GET
+Returns a list of all existing edges between layers and/or external components
+
+===== POST
+Wire layers or external components together. For example, if an
+OpenFlow controller is listening on port 16653 and the switches try to
+connect to port 6653, the following will insert the layer with id 1
+between switches and controller (provided that the layer with id 1
+exists).
+
+
+[source,shell]
+----
+curl -i localhost:8080/edges \
+     -H "Content-type: application/json" \
+     -d '{ "source" : { "address" : "127.0.0.1:6653" },
+           "targets" : [
+             { "layer" : "1" }
+           ]
+         }'
+curl -i localhost:8080/edges \
+     -H "Content-type: application/json" \
+     -d '{ "source" : { "layer" : 1 },
+           "targets" : [
+             { "address" : "127.0.0.1:16653" }
+           ]
+         }'
+----
+
+It's also possible to directly forward the messages switches try to send to port 6653 to the controller listening on port 16653:
+
+----
+curl -i localhost:8080/edges \
+     -H "Content-type: application/json" \
+     -d '{ "source" : { "address" : "127.0.0.1:6653" },
+           "targets" : [
+             { "address" : "127.0.0.1:16653" }
+           ]
+         }'
+----
+
+
+
+
+

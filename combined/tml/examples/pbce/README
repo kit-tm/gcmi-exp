@@ -1,0 +1,4 @@
+Compile with ../../gradlew installDist (inside directory examples/pbce)
+
+Then run build/install/pbce/bin/pbce --listen 0.0.0.0:50000 --upstream 192.168.122.1:50001 --listen-for-management 0.0.0.0:50023
+And connect to 0.0.0.0:50023 via telnet: telnet localhost 50023

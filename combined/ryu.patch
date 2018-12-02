@@ -1,0 +1,15 @@
+diff --git ryu/cmd/manager.py ryu/cmd/manager.py
+index 797d8d5f..70a7c705 100755
+--- ryu/cmd/manager.py
++++ ryu/cmd/manager.py
+@@ -48,6 +48,10 @@ CONF.register_cli_opts([
+                 '(use only for debugging)'),
+     cfg.StrOpt('user-flags', default=None,
+                help='Additional flags file for user applications'),
++    cfg.StrOpt('num-links', default='1', help=""),
++    cfg.StrOpt('num-repetitions', default='1', help=""),
++    cfg.BoolOpt('reactive', default=False, help=""),
++    cfg.BoolOpt('with-tml', default=False, help=""),
+ ])
+ 
+ 
