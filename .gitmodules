@@ -1,0 +1,3 @@
+[submodule "mininet"]
+	path = mininet
+	url = git@github.com:mininet/mininet.git
