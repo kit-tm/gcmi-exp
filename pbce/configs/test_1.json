@@ -1,0 +1,9 @@
+{
+    "type": "pbce2",
+    "config": {
+        "lower": 1000000,
+        "upper": 2000000,
+        "upper2": 3000000,
+        "gracePeriod": 3.0
+    }
+}
