@@ -1,0 +1,3 @@
+# GCMI Experiment Repository (for Reproducibility)
+
+This folder contains the raw data of several runs for the two experiments described in https://github.com/kit-tm/gcmi-exp. The results were obtained using the "Manual Setup" guide. In between the runs, the result folder was deleted and the virtual machine was restarted (`vagrant halt` followed by `vagrant up`). A normal labtop (ThinkPad Lenovo T450s) was used.
