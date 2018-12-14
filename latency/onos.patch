@@ -1,0 +1,108 @@
+diff --git apps/learning-switch/src/main/java/org/onosproject/learningswitch/LearningSwitchSolution.java apps/learning-switch/src/main/java/org/onosproject/learningswitch/LearningSwitchSolution.java
+index 621d16d..a648502 100644
+--- apps/learning-switch/src/main/java/org/onosproject/learningswitch/LearningSwitchSolution.java
++++ apps/learning-switch/src/main/java/org/onosproject/learningswitch/LearningSwitchSolution.java
+@@ -21,17 +21,17 @@ import org.apache.felix.scr.annotations.Deactivate;
+ import org.apache.felix.scr.annotations.Component;
+ import org.apache.felix.scr.annotations.Reference;
+ import org.apache.felix.scr.annotations.ReferenceCardinality;
+-import org.onlab.packet.Ethernet;
++//import org.onlab.packet.Ethernet;
+ import org.onlab.packet.MacAddress;
+ import org.onosproject.core.ApplicationId;
+ import org.onosproject.core.CoreService;
+ import org.onosproject.net.ConnectPoint;
+ import org.onosproject.net.DeviceId;
+ import org.onosproject.net.PortNumber;
+-import org.onosproject.net.flow.DefaultFlowRule;
++//import org.onosproject.net.flow.DefaultFlowRule;
+ import org.onosproject.net.flow.DefaultTrafficSelector;
+-import org.onosproject.net.flow.DefaultTrafficTreatment;
+-import org.onosproject.net.flow.FlowRule;
++//import org.onosproject.net.flow.DefaultTrafficTreatment;
++//import org.onosproject.net.flow.FlowRule;
+ import org.onosproject.net.flow.FlowRuleService;
+ import org.onosproject.net.packet.PacketContext;
+ import org.onosproject.net.packet.PacketPriority;
+@@ -48,7 +48,7 @@ import java.util.Optional;
+  * This class contains the solution to the learning switch tutorial.  Change "enabled = false"
+  * to "enabled = true" below, to run the solution.
+  */
+-@Component(immediate = true, enabled = false)
++@Component(immediate = true, enabled = true)
+ public class LearningSwitchSolution {
+ 
+     // Instantiates the relevant services.
+@@ -86,10 +86,10 @@ public class LearningSwitchSolution {
+         /*
+          * Restricts packet types to IPV4 and ARP by only requesting those types.
+          */
+-        packetService.requestPackets(DefaultTrafficSelector.builder()
+-                .matchEthType(Ethernet.TYPE_IPV4).build(), PacketPriority.REACTIVE, appId, Optional.empty());
+-        packetService.requestPackets(DefaultTrafficSelector.builder()
+-                .matchEthType(Ethernet.TYPE_ARP).build(), PacketPriority.REACTIVE, appId, Optional.empty());
++        packetService.requestPackets(
++            DefaultTrafficSelector.builder().build(), PacketPriority.REACTIVE, appId, Optional.empty());
++        //packetService.requestPackets(DefaultTrafficSelector.builder()
++        //        .matchEthType(Ethernet.TYPE_ARP).build(), PacketPriority.REACTIVE, appId, Optional.empty());
+     }
+ 
+     /**
+@@ -114,7 +114,7 @@ public class LearningSwitchSolution {
+          */
+         @Override
+         public void process(PacketContext pc) {
+-            log.info(pc.toString());
++            //log.info(pc.toString());
+             initMacTable(pc.inPacket().receivedFrom());
+ 
+ 
+@@ -155,9 +155,9 @@ public class LearningSwitchSolution {
+              * and do nothing with the packet. actLikeSwitch can only process IPV4 packets.
+              */
+             Short type = pc.inPacket().parsed().getEtherType();
+-            if (type != Ethernet.TYPE_IPV4) {
+-                return;
+-            }
++            //if (type != Ethernet.TYPE_IPV4) {
++            //    return;
++            //}
+ 
+             /*
+              * Learn the destination, source, and output port of the packet using a ConnectPoint and the
+@@ -178,14 +178,14 @@ public class LearningSwitchSolution {
+              */
+             if (outPort != null) {
+                 pc.treatmentBuilder().setOutput(outPort);
+-                FlowRule fr = DefaultFlowRule.builder()
+-                        .withSelector(DefaultTrafficSelector.builder().matchEthDst(dstMac).build())
+-                        .withTreatment(DefaultTrafficTreatment.builder().setOutput(outPort).build())
+-                        .forDevice(cp.deviceId()).withPriority(PacketPriority.REACTIVE.priorityValue())
+-                        .makeTemporary(60)
+-                        .fromApp(appId).build();
+-
+-                flowRuleService.applyFlowRules(fr);
++                //FlowRule fr = DefaultFlowRule.builder()
++                //        .withSelector(DefaultTrafficSelector.builder().matchEthDst(dstMac).build())
++                //        .withTreatment(DefaultTrafficTreatment.builder().setOutput(outPort).build())
++                //        .forDevice(cp.deviceId()).withPriority(PacketPriority.REACTIVE.priorityValue())
++                //        .makeTemporary(60)
++                //        .fromApp(appId).build();
++
++                //flowRuleService.applyFlowRules(fr);
+                 pc.send();
+             } else {
+             /*
+diff --git protocols/openflow/api/src/main/java/org/onosproject/openflow/controller/DefaultOpenFlowPacketContext.java protocols/openflow/api/src/main/java/org/onosproject/openflow/controller/DefaultOpenFlowPacketContext.java
+index ac9ed82..d5506d0 100644
+--- protocols/openflow/api/src/main/java/org/onosproject/openflow/controller/DefaultOpenFlowPacketContext.java
++++ protocols/openflow/api/src/main/java/org/onosproject/openflow/controller/DefaultOpenFlowPacketContext.java
+@@ -81,7 +81,7 @@ public final class DefaultOpenFlowPacketContext implements OpenFlowPacketContext
+                     .setInPort(pktinInPort())
+                     .setBufferId(OFBufferId.NO_BUFFER)
+                     .setData(data)
+-//                .setBufferId(pktin.getBufferId())
++                    .setBufferId(pktin.getBufferId())
+                     .setActions(Collections.singletonList(act)).build();
+         }
+         return builder.setXid(xid)

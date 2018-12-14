@@ -1,0 +1,4 @@
+*.log
+*.csv
+config.sh
+plot.pdf

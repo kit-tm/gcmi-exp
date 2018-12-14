@@ -1,0 +1,24 @@
+diff --git ryu/app/simple_switch.py ryu/app/simple_switch.py
+index 33c4f7d..68a00fb 100644
+--- ryu/app/simple_switch.py
++++ ryu/app/simple_switch.py
+@@ -81,8 +81,8 @@ class SimpleSwitch(app_manager.RyuApp):
+         actions = [datapath.ofproto_parser.OFPActionOutput(out_port)]
+ 
+         # install a flow to avoid packet_in next time
+-        if out_port != ofproto.OFPP_FLOOD:
+-            self.add_flow(datapath, msg.in_port, dst, src, actions)
++        #if out_port != ofproto.OFPP_FLOOD:
++        #    self.add_flow(datapath, msg.in_port, dst, src, actions)
+ 
+         data = None
+         if msg.buffer_id == ofproto.OFP_NO_BUFFER:
+@@ -91,6 +91,8 @@ class SimpleSwitch(app_manager.RyuApp):
+         out = datapath.ofproto_parser.OFPPacketOut(
+             datapath=datapath, buffer_id=msg.buffer_id, in_port=msg.in_port,
+             actions=actions, data=data)
++        out.set_xid(msg.xid)
++        self.logger.info("%s %s", out.xid, msg.xid)
+         datapath.send_msg(out)
+ 
+     @set_ev_cls(ofp_event.EventOFPPortStatus, MAIN_DISPATCHER)

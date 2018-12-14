@@ -1,0 +1,213 @@
+diff --git cbench/cbench.c cbench/cbench.c
+index 70fed93..ef0c4c2 100644
+--- cbench/cbench.c
++++ cbench/cbench.c
+@@ -388,7 +388,7 @@ int main(int argc, char * argv[])
+         if(debug)
+             fprintf(stderr,"Initializing switch %d ... ", i+1);
+         fflush(stderr);
+-        fakeswitch_init(&fakeswitches[i],dpid_offset+i,sock,BUFLEN, debug, delay, mode, total_mac_addresses, learn_dst_macs);
++        fakeswitch_init(&fakeswitches[i],dpid_offset+i,sock,BUFLEN, debug, delay, mode, total_mac_addresses, learn_dst_macs, 1000000);
+         if(debug)
+             fprintf(stderr," :: done.\n");
+         fflush(stderr);
+@@ -427,6 +427,11 @@ int main(int argc, char * argv[])
+                 min, max, avg, std_dev);
+     }
+ 
++    int cnt;
++    double avg, dev;
++    fakeswitches_evaluate(fakeswitches, n_fakeswitches, 0.2, &cnt, &min, &max, &avg, &dev);
++    printf("MEASUREMENT: cnt/min/max/avg/dev = %d/%.10f/%.10f/%.10f/%.10f\n", cnt, min, max, avg, dev);
++
+     return 0;
+ }
+ 
+diff --git cbench/fakeswitch.c cbench/fakeswitch.c
+index a424d14..c3105df 100644
+--- cbench/fakeswitch.c
++++ cbench/fakeswitch.c
+@@ -1,4 +1,5 @@
+ #include <assert.h>
++#include <math.h>
+ #include <stdarg.h>
+ #include <stdio.h>
+ #include <stdlib.h>
+@@ -51,7 +52,26 @@ static inline uint64_t ntohll(uint64_t n)
+     return htonl(1) == 1 ? n : ((uint64_t) ntohl(n) << 32) | ntohl(n >> 32);
+ }
+ 
+-void fakeswitch_init(struct fakeswitch *fs, int dpid, int sock, int bufsize, int debug, int delay, enum test_mode mode, int total_mac_addresses, int learn_dstmac)
++
++struct timespec timespec_diff(struct timespec t1, struct timespec t2)
++{
++    struct timespec diff;
++    if (t2.tv_nsec < t1.tv_nsec) {
++        diff.tv_sec  = t2.tv_sec - t1.tv_sec - 1;
++        diff.tv_nsec = t2.tv_nsec - t1.tv_nsec + 1000000000;
++    } else {
++        diff.tv_sec  = t2.tv_sec - t1.tv_sec;
++        diff.tv_nsec = t2.tv_nsec - t1.tv_nsec;
++    }
++    return diff;
++}
++
++double timespec_to_double(struct timespec t1)
++{
++    return t1.tv_sec + t1.tv_nsec / 1000000000.0;
++}
++
++void fakeswitch_init(struct fakeswitch *fs, int dpid, int sock, int bufsize, int debug, int delay, enum test_mode mode, int total_mac_addresses, int learn_dstmac, int size_measurements)
+ {
+     char buf[BUFLEN];
+     struct ofp_header ofph;
+@@ -68,10 +88,13 @@ void fakeswitch_init(struct fakeswitch *fs, int dpid, int sock, int bufsize, int
+     fs->delay = delay;
+     fs->total_mac_addresses = total_mac_addresses;
+     fs->current_mac_address = 0;
+-    fs->xid = 1;
++    fs->xid = 0;
+     fs->learn_dstmac = learn_dstmac;
+     fs->current_buffer_id = 1;
+-  
++    fs->i_measurement = 0;
++    fs->size_measurements = size_measurements;
++    fs->measurements = malloc(size_measurements * sizeof(struct measurement));
++
+     ofph.version = OFP_VERSION;
+     ofph.type = OFPT_HELLO;
+     ofph.length = htons(sizeof(ofph));
+@@ -381,6 +404,18 @@ void fakeswitch_handle_read(struct fakeswitch *fs)
+                     fs->count++;        // got response to what we went
+                     fs->probe_state--;
+                 }
++                int i;
++                for ( i = fs->i_measurement < 50 ? 0 : fs->i_measurement - 50; i < fs->i_measurement; i++) {
++                    if (fs->measurements[i].xid == ntohl(ofph->xid)) {
++                        if (fs->measurements[i].valid)
++				break;
++                        fs->measurements[i].valid = 1;
++                        struct timespec finish;
++                        assert(clock_gettime(CLOCK_MONOTONIC, &finish) == 0);
++                        fs->measurements[i].timespec = timespec_diff(fs->measurements[i].timespec, finish);
++                        break;
++                    }
++                }
+                 break;
+             case OFPT_FLOW_MOD:
+                 fm = (struct ofp_flow_mod *) ofph;
+@@ -494,9 +529,15 @@ static void fakeswitch_handle_write(struct fakeswitch *fs)
+             
+             fs->probe_state++;
+             // TODO come back and remove this copy
+-            count = make_packet_in(fs->id, fs->xid++, fs->current_buffer_id, buf, BUFLEN, fs->current_mac_address);
++            count = make_packet_in(fs->id, ++fs->xid, fs->current_buffer_id, buf, BUFLEN, fs->current_mac_address);
+             fs->current_mac_address = ( fs->current_mac_address + 1 ) % fs->total_mac_addresses;
+             fs->current_buffer_id =  ( fs->current_buffer_id + 1 ) % NUM_BUFFER_IDS;
++            if (fs->i_measurement < fs->size_measurements) {
++                fs->measurements[fs->i_measurement].valid = 0;
++                fs->measurements[fs->i_measurement].xid = fs->xid;
++                assert(clock_gettime(CLOCK_MONOTONIC, &fs->measurements[fs->i_measurement].timespec) == 0);
++                fs->i_measurement++;
++            }
+             msgbuf_push(fs->outbuf, buf, count);
+             debug_msg(fs, "send message %d", i);
+         }
+@@ -541,3 +582,46 @@ static int debug_msg(struct fakeswitch * fs, char * msg, ...)
+     // fflush(stderr);     // should be redundant, but often isn't :-(
+     return 1;
+ }
++
++void fakeswitches_evaluate(struct fakeswitch *fs, int n_fakeswitches, double discard, int *cnt, double *min, double *max, double *avg, double *dev)
++{
++    int mis = 0;
++    int f;
++    int i;
++    double sum = 0.0;
++    double c = 0.0;
++    *cnt = 0;
++    *min = INFINITY;
++    *max = -INFINITY;
++    for ( f = 0; f < n_fakeswitches; f++) {
++        for ( i = discard * fs[f].i_measurement; i < fs[f].i_measurement; i++) {
++            if (fs[f].measurements[i].valid) {
++                double v = timespec_to_double(fs[f].measurements[i].timespec);
++                *cnt += 1;
++                if (v < *min) *min = v;
++                if (v > *max) *max = v;
++                double y = v - c;
++                double t = sum + y;
++                c = (t - sum) - y;
++                sum = t;
++            } else {
++                mis += 1;
++            }
++        }
++    }
++    printf("missed measurements: %d\n", mis);
++    *avg = sum / *cnt;
++    sum = 0.0;
++    c = 0.0;
++    for ( f = 0; f < n_fakeswitches; f++) {
++        for ( i = discard * fs[f].i_measurement; i < fs[f].i_measurement; i++) {
++            if (fs[f].measurements[i].valid) {
++                double y = pow(timespec_to_double(fs[f].measurements[i].timespec) - *avg, 2);
++                double t = sum + y;
++                c = (t - sum) - y;
++                sum = t;
++            }
++        }
++    }
++    *dev = sqrt(sum / *cnt);
++}
+diff --git cbench/fakeswitch.h cbench/fakeswitch.h
+index d0352e7..9a32324 100644
+--- cbench/fakeswitch.h
++++ cbench/fakeswitch.h
+@@ -2,6 +2,7 @@
+ #define FAKESWITCH_H
+ 
+ #include <poll.h>
++#include <time.h>
+ 
+ #include "msgbuf.h"
+ 
+@@ -19,6 +20,12 @@ enum handshake_status {
+     WAITING = 101
+ };
+     
++struct measurement {
++    int valid;
++    unsigned int xid;
++    struct timespec timespec;
++};
++
+ struct fakeswitch 
+ {
+     int id;                             // switch number
+@@ -39,6 +46,9 @@ struct fakeswitch
+     int current_mac_address;
+     int learn_dstmac;
+     int current_buffer_id;
++    int i_measurement;
++    int size_measurements;
++    struct measurement *measurements;
+ };
+ 
+ /*** Initialize an already allocated fakeswitch
+@@ -54,7 +64,7 @@ struct fakeswitch
+  * @param total_mac_addresses      The total number of unique mac addresses
+  *                                 to use for packet ins from this switch
+  */
+-void fakeswitch_init(struct fakeswitch *fs, int dpid, int sock, int bufsize, int debug, int delay, enum test_mode mode, int total_mac_addresses, int learn_dstmac);
++void fakeswitch_init(struct fakeswitch *fs, int dpid, int sock, int bufsize, int debug, int delay, enum test_mode mode, int total_mac_addresses, int learn_dstmac, int size_measurements);
+ 
+ 
+ /*** Set the desired flags for poll()
+@@ -81,4 +91,6 @@ void fakeswitch_handle_io(struct fakeswitch *fs, const struct pollfd *pfd);
+  */
+ int fakeswitch_get_count(struct fakeswitch *fs);
+ 
++void fakeswitches_evaluate(struct fakeswitch *fs, int n_fakeswitches, double discard, int *cnt, double *min, double *max, double *avg, double *dev);
++
+ #endif
