@@ -34,7 +34,7 @@ The experiments are executed automatically. A full run will take approx. 30 minu
 
 ## Detailed Experiment Description
 
-There are currently two fully automated experiments (pbce and combined) which can be found in their respective directories. The following subsections describe the two experiments and includes pointers to important code files.
+There are currently two fully automated experiments (PBCE Experiment and Combined PBCE/TableVisor Experiment). The latency experiment isn't fully automated, because three physical servers are required. The following subsections describe the experiments and include pointers to important files. Hint: This part is not required if you only want to reproduce the results (it just provides further information).
 
 ### PBCE Experiment
 
@@ -45,12 +45,17 @@ generated at a constant rate, see https://github.com/kit-tm/gcmi-exp/blob/master
 
 ### Combined PBCE/TableVisor Experiment
 
-Todo
+This experiment is similar to the one above, except that the learning switch is replaced with a firewall routing app (https://github.com/kit-tm/gcmi-exp/blob/master/combined/apps/test_router_13.py) which makes use of multiple flow tables. For simplicity, flows are accepted or blocked randomly with a probability of 99\% for accepted flows. The TableVisor functionality (see https://ieeexplore.ieee.org/document/8004108) is required if the switches do not support multi table processing. The corresponding GCMI app can be found here: https://github.com/kit-tm/gcmi-exp/blob/master/combined/tml/composer/src/main/java/com/github/sherter/jcon/composer/TableVisorLayer.java. The GCMI app for PBCE can be found here: https://github.com/kit-tm/gcmi-exp/blob/master/combined/tml/composer/src/main/java/com/github/sherter/jcon/composer/Pbce2Layer.java
 
+The topology for this experiment has three switches T0, T1 and T2 equipped with a single flow table. These three switches are abstracted to a single switch with three flow tables by the TableVisor GCMI app. The switches are interconnected in a circular fashion. T0 is connected to TS through N links. T0, T1 and T2 are connected to GCMI. The Ryu Controller is connected with  TableVisor and TableVisor is connected with PBCE.
+
+### Latency Experiment
+
+This experiment is further described in the latency directory: https://github.com/kit-tm/gcmi-exp/tree/master/latency
 
 ## Manual Setup
 
-This repository contains dependencies to mininet, the Ryu controller framework and the core code base of GCMI. All required submodules that are needed to create the automated evaluation environments can be cloned with a single command. To build the vagrant boxes from source, execute the following commands:
+This repository contains dependencies to mininet, the Ryu controller framework and the core code base of GCMI. All required submodules that are needed to create the automated evaluation environments can be cloned with a single command. Time required: approx. 10-20 minutes on a normal labtop and additional 60 minutes for running both experiments. To build the vagrant boxes from source, execute the following commands:
 
 ```
 $ git clone --recurse-submodules git@github.com:kit-tm/gcmi-exp.git`
@@ -101,7 +106,7 @@ test_1_ryu.log --> output of ryu during experiment
 
 ## Archive of Raw Experiment Results
 
-The raw results of several experiments can be found in the raw_data directory. 
+The raw results of several experiments can be found in the raw_data directory: https://github.com/kit-tm/gcmi-exp/tree/master/raw_results
 
 
 
