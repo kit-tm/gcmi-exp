@@ -11,7 +11,7 @@ The automated experiment environment supports Linux, macOS and Windows. It depen
 
 Then execute the following commands to run the PBCE experiment:
 ```
-$ wget todo/gcmi-exp-pbce.box
+$ wget http://tm.uka.de/~bauer/gcmi/gcmi-exp-pbce.box
 $ vagrant add --name pbce gcmi-exp-pbce.box
 $ vagrant init pbce
 $ vagrant up
@@ -22,7 +22,7 @@ vagrant@ubuntu-xenial:~$ scripts/test_all.sh
 To run the combined experiments with PBCE and TableVisor, execute the following commands:
 
 ```
-$ wget todo/gcmi-exp-combined.box
+$ wget http://tm.uka.de/~bauer/gcmi/gcmi-exp-combined.box
 $ vagrant add --name combined gcmi-exp-combined.box
 $ vagrant init combined
 $ vagrant up
